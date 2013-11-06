@@ -39,6 +39,7 @@
             );
             
             var seatStatus = new Array(8);
+            var mySeat = null;
             
             function init() {
                 userList = document.getElementById("userList");
@@ -105,14 +106,20 @@
                 window.location.replace("logout.jsp");
             }
             
-            function seatAt(id) {
+            function takeSeatAt(id) {
                 if(seatStatus[id]) {
                     document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2];
                     seatStatus[id] = false;
+                    mySeat = null;
                 }
                 else {
+                    if(mySeat !== null){
+                        alert("You have already sitten at " + mySeat);
+                        return;
+                    }
                     document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2 + 2];
                     seatStatus[id] = true;
+                    mySeat = id;
                 }
             }
             window.addEventListener("load", init, false);
@@ -127,26 +134,26 @@
                 <table>
                     <tr>
                         <td>
-                            <input type="image" id="seat1" src="img/left_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat1" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
                             <input type="image" id="table1" src="img/table.png"/>
-                            <input type="image" id="seat2" src="img/right_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat2" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                         <td>
-                            <input type="image" id="seat3" src="img/left_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat3" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
                             <input type="image" id="table2" src="img/table.png"/>
-                            <input type="image" id="seat4" src="img/right_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat4" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="image" id="seat5" src="img/left_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat5" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
                             <input type="image" id="table3" src="img/table.png"/>
-                            <input type="image" id="seat6" src="img/right_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat6" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                         <td>
-                            <input type="image" id="seat7" src="img/left_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat7" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
                             <input type="image" id="table4" src="img/table.png"/>
-                            <input type="image" id="seat8" src="img/right_chair.png" onclick="seatAt(this.id);" />
+                            <input type="image" id="seat8" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                     </tr>
                 </table>
