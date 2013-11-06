@@ -56,7 +56,7 @@
             }
 
             function onOpen(evt) {
-                doSend(<%=WebSocketMessage.ENTER_LOBBY%>, "<%=username%>");
+                doSend(<%=WebSocketMessage.ENTER_LOBBY%>, "<%=username%>", null);
             }
 
             function onClose(evt) {
@@ -69,8 +69,23 @@
             function onError(evt) { 
             } 
 
-            function doSend(action, param) {
-                websocket.send(JSON.stringify({'action':action, 'param':param}));
+            function doSend(action, param1, param2) {
+                if(param2 === null){
+                    websocket.send(JSON.stringify({'action':action, 'param1':param1}));
+                }
+                else{
+                    websocket.send(JSON.stringify({'action':action, 'param1':param1, 'param2':param2}));
+                }
+            }
+
+            function sitUpdate(id){
+                document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2 + 2];
+                seatStatus[id] = true;
+            }
+
+            function standUpdate(id){
+                document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2];
+                seatStatus[id] = false;
             }
             
             function parseMessage(message) {
@@ -78,10 +93,18 @@
                 switch(msg.action)
                 {
                     case <%=WebSocketMessage.ENTER_LOBBY%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param+"</span> has entered the lobby.");
+                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has entered the lobby.");
                         break;
                     case <%=WebSocketMessage.EXIT_LOBBY%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param+"</span> has left the lobby.");
+                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has left the lobby.");
+                        break;
+                    case <%=WebSocketMessage.TAKE_SEAT%>:
+                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has taken seat </span>" + msg.param2.charAt(4)+".");
+                        sitUpdate(msg.param2);
+                        break;
+                    case <%=WebSocketMessage.LEAVE_SEAT%>:
+                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has left seat </span>" + msg.param2.charAt(4)+".");
+                        standUpdate(msg.param2);
                         break;
                     default:
                 }
@@ -101,17 +124,25 @@
             }
             
             function logout() {
-                doSend(<%=WebSocketMessage.EXIT_LOBBY%>, "<%=username%>");
+                doSend(<%=WebSocketMessage.EXIT_LOBBY%>, "<%=username%>", null);
                 websocket.close();
                 window.location.replace("logout.jsp");
             }
-            
+
+
             function takeSeatAt(id) {
-                if(seatStatus[id]) {
+                //If in the seat and you're in the seat
+                if(seatStatus[id] && mySeat === id) {
                     document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2];
                     seatStatus[id] = false;
                     mySeat = null;
+                    doSend(<%=WebSocketMessage.LEAVE_SEAT%>, "<%=username%>", id);
                 }
+                else if(seatStatus[id] && mySeat !== id){
+                    alert("Seat is taken");
+                    return;
+                }
+                //If not in the seat
                 else {
                     if(mySeat !== null){
                         alert("You have already sitten at " + mySeat);
@@ -120,6 +151,22 @@
                     document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2 + 2];
                     seatStatus[id] = true;
                     mySeat = id;
+                    doSend(<%=WebSocketMessage.TAKE_SEAT%>, "<%=username%>", id);
+                }
+            }
+
+            function startTable(id){
+                //mySeat must match the table
+                if(
+                   ((mySeat === "seat1" || mySeat === "seat2") && id === "table1") ||
+                   ((mySeat === "seat3" || mySeat === "seat4") && id === "table2") ||
+                   ((mySeat === "seat5" || mySeat === "seat6") && id === "table3") ||
+                   ((mySeat === "seat7" || mySeat === "seat8") && id === "table4")
+                ){
+                    alert("Start");
+                }
+                else{
+                    alert("You must be sitting at the table to start");
                 }
             }
             window.addEventListener("load", init, false);
@@ -135,24 +182,24 @@
                     <tr>
                         <td>
                             <input type="image" id="seat1" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
-                            <input type="image" id="table1" src="img/table.png"/>
+                            <input type="image" id="table1" src="img/table.png" onclick="startTable(this.id);"/>
                             <input type="image" id="seat2" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                         <td>
                             <input type="image" id="seat3" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
-                            <input type="image" id="table2" src="img/table.png"/>
+                            <input type="image" id="table2" src="img/table.png" onclick="startTable(this.id);"/>
                             <input type="image" id="seat4" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                     </tr>
                     <tr>
                         <td>
                             <input type="image" id="seat5" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
-                            <input type="image" id="table3" src="img/table.png"/>
+                            <input type="image" id="table3" src="img/table.png" onclick="startTable(this.id);"/>
                             <input type="image" id="seat6" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                         <td>
                             <input type="image" id="seat7" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
-                            <input type="image" id="table4" src="img/table.png"/>
+                            <input type="image" id="table4" src="img/table.png" onclick="startTable(this.id);"/>
                             <input type="image" id="seat8" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
                         </td>
                     </tr>
