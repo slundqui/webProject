@@ -23,7 +23,7 @@
             #userList {background: #FF6; float: left;  width: 140px; height: 540px; padding: 5px; overflow: auto; overflow-x: hidden;}
             #lobbyContainer {background: #9FF; float: right; width: 840px; height:540px; padding: 5px; }
             #logPanel {background: #333; color: #FFF; clear: both; width: auto; height: 140px; padding: 5px; overflow: auto; overflow-x: hidden;}
-            table {margin: auto;border-collapse:separate; border-spacing:50px 70px;}
+            #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px 70px;}
             input[type="image"] { outline: none;}
         </style>
         <script language="javascript" type="text/javascript">  
@@ -175,10 +175,10 @@
     <body>
         <div id="page-container">
             <div id="topbar"><a href="#" onclick="logout(); return false;">Logout</a></div>
-            <div id="header">Welcome to the Game Lobby!</p>
+            <div id="header">Welcome to the Game Lobby!</div>
             <div id="userList">[To-do:list online users]</div>
             <div id="lobbyContainer">
-                <table>
+                <table id="lobbyTable">
                     <tr>
                         <td>
                             <input type="image" id="seat1" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
