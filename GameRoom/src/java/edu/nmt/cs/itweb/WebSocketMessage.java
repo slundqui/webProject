@@ -13,4 +13,6 @@ package edu.nmt.cs.itweb;
 public class WebSocketMessage {
     public static final int ENTER_LOBBY = 0;
     public static final int EXIT_LOBBY = 1;
+    public static final int TAKE_SEAT = 2;
+    public static final int LEAVE_SEAT = 3;
 }
