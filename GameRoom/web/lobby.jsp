@@ -206,7 +206,6 @@
                 </table>
             </div>
             <div id="logPanel"></div>
-            </div>
         </div>
     </body>
 </html>
