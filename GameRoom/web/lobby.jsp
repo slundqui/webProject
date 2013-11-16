@@ -24,8 +24,10 @@
             #userList {background: #FF6; float: left;  width: 140px; height: 540px; padding: 5px; overflow: auto; overflow-x: hidden;}
             #lobbyContainer {background: #9FF; float: right; width: 840px; height:540px; padding: 5px; }
             #logPanel {background: #333; color: #FFF; clear: both; width: auto; height: 130px; padding: 5px; overflow: auto; overflow-x: hidden;}
-            #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px 70px;}
+            #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px;}
             input[type="image"] { outline: none;}
+            .leftUser {text-align: left;}
+            .rightUser {text-align: right;}
         </style>
         <script language="javascript" type="text/javascript">  
             var wsUri = "ws://localhost:8080/GameRoom/GameLobby";
@@ -40,7 +42,8 @@
             );
             
             var seatCount = <%=ServerConfig.SEAT_COUNT%>;
-            var seats = new Array(seatCount);
+            var seatsUser = new Array(seatCount);
+            var seatsStatus = new Array(seatCount);
             var mySeat = null;
             
             function init() {
@@ -73,16 +76,19 @@
                         enterLobby(msg.user);
                         break;
                     case <%=WebSocketMessage.EXIT_LOBBY%>:
-                        exitLobby(user);
+                        exitLobby(msg.user);
                         break;
                     case <%=WebSocketMessage.RESPONSE_SEATS_INFO%>:
-                        updateSeatsInfo(msg.seatsInfo);
+                        updateSeatsInfo(msg.seatsUser, msg.seatsStatus);
                         break;
                     case <%=WebSocketMessage.TAKE_SEAT_SUCCESS%>:
                         sitUpdate(msg.user, msg.target);
                         break;
                     case <%=WebSocketMessage.LEAVE_SEAT_SUCCESS%>:
                         standUpdate(msg.user, msg.target);
+                        break;
+                    case <%=WebSocketMessage.READY_FOR_GAME%>:
+                        readyForGame(msg.user, msg.target);
                         break;
                     default:
                 }
@@ -96,6 +102,17 @@
                 websocket.send(JSON.stringify({'action':action, 'user':user, 'target':target}));
             }
             
+            function readyForGame(user, seatIndex) {
+                var seatId = 'seat'+seatIndex;
+                seatsStatus[seatId] = true;
+                document.getElementById(seatId+'_status').innerHTML  = "<span style='font-weight:bold;color:green'>I'm ready!</span>";
+                var pairSeatId = 'seat' + (seatIndex % 2 === 0 ? seatIndex-1 : seatIndex+1); 
+                if( seatsStatus[pairSeatId] && (mySeat === seatId || mySeat === pairSeatId) ) {
+                    alert("Your game is about to start.");
+                    //TO-DO: redirect to the game page
+                }
+            }
+            
             function enterLobby(user) {
                 writeToLogPanel("<span style='color:red'>"+user+"</span> has entered the lobby.");
             }
@@ -104,16 +121,21 @@
                 writeToLogPanel("<span style='color:red'>"+user+"</span> has left the lobby.");
             }
             
-            function updateSeatsInfo(jSeats) {
+            function updateSeatsInfo(jsUser, jsStatus) {
                 for(var i = 0; i < seatCount; ++i) {
                     var seatIndex = i+1;
                     var seatId = "seat"+seatIndex;
-                    if(jSeats[i].length === 0) {
-                        seats[seatId] = null;
+                    if(jsUser[i].length === 0) {
+                        seatsUser[seatId] = null;
                     }
                     else {
-                        seats[seatId] = jSeats[i];
+                        seatsUser[seatId] = jsUser[i];
                         document.getElementById(seatId).src=imageSrc[seatIndex % 2 + 2];
+                        document.getElementById(seatId+'_user').innerHTML  = jsUser[i];
+                    }
+                    seatsStatus[seatId] = jsStatus[i];
+                    if(seatsStatus[seatId]) {                       
+                        document.getElementById(seatId+'_status').innerHTML  = "<span style='font-weight:bold;color:green'>I'm ready!</span>";
                     }
                 }
             }
@@ -121,7 +143,8 @@
             function sitUpdate(user, seatIndex){
                 var seatId = 'seat'+seatIndex;
                 document.getElementById(seatId).src=imageSrc[seatIndex % 2 + 2];
-                seats[seatId] = user;
+                document.getElementById(seatId+'_user').innerHTML  = user;
+                seatsUser[seatId] = user;
                 if("<%=username%>" === user) {
                     mySeat = seatId;
                 }
@@ -131,7 +154,9 @@
             function standUpdate(user, seatIndex){
                 var seatId = 'seat'+seatIndex;
                 document.getElementById(seatId).src=imageSrc[seatIndex % 2];
-                seats[seatId] = null;
+                document.getElementById(seatId+'_user').innerHTML  = "&nbsp;";
+                document.getElementById(seatId+'_status').innerHTML = "&nbsp;";
+                seatsUser[seatId] = null;
                 writeToLogPanel("<span style='color:red'>"+user+"</span> has left seat </span>" + seatIndex +".");
             }
 
@@ -149,6 +174,9 @@
             }
             
             function logout() {
+                if(mySeat !== null) {
+                    doSend(<%=WebSocketMessage.LEAVE_SEAT_REQUEST%>, "<%=username%>", getSeatIndex(mySeat));
+                }
                 doSend(<%=WebSocketMessage.EXIT_LOBBY%>, "<%=username%>");
                 websocket.close();
                 window.location.replace("logout.jsp");
@@ -157,14 +185,14 @@
             function seatOnClick(seatId) {
                 var seatIndex = getSeatIndex(seatId);
                 //If in the seat and you're in the seat
-                if(seats[seatId] && mySeat === seatId) {
+                if(seatsUser[seatId] && mySeat === seatId) {
                     // since LEAVE_SEAT_REQUEST will always success, we can update the UI and seats before sending the message.
                     document.getElementById(seatId).src=imageSrc[seatIndex % 2];
-                    seats[seatId] = null;
+                    seatsUser[seatId] = null;
                     mySeat = null;
                     doSend(<%=WebSocketMessage.LEAVE_SEAT_REQUEST%>, "<%=username%>", seatIndex);
                 }
-                else if(seats[seatId] && mySeat !== seatId){
+                else if(seatsUser[seatId] && mySeat !== seatId){
                     alert("Seat is taken");
                     return;
                 }
@@ -182,15 +210,15 @@
                 return parseInt(seatId.charAt(4));
             }
 
-            function startTable(id){
+            function tableOnClick(tableId) {
                 //mySeat must match the table
                 if(
-                   ((mySeat === "seat1" || mySeat === "seat2") && id === "table1") ||
-                   ((mySeat === "seat3" || mySeat === "seat4") && id === "table2") ||
-                   ((mySeat === "seat5" || mySeat === "seat6") && id === "table3") ||
-                   ((mySeat === "seat7" || mySeat === "seat8") && id === "table4")
+                   ((mySeat === "seat1" || mySeat === "seat2") && tableId === "table1") ||
+                   ((mySeat === "seat3" || mySeat === "seat4") && tableId === "table2") ||
+                   ((mySeat === "seat5" || mySeat === "seat6") && tableId === "table3") ||
+                   ((mySeat === "seat7" || mySeat === "seat8") && tableId === "table4")
                 ){
-                    alert("Start");
+                    doSend(<%=WebSocketMessage.READY_FOR_GAME%>, "<%=username%>", getSeatIndex(mySeat));
                 }
                 else{
                     alert("You must be sitting at the table to start");
@@ -208,26 +236,74 @@
                 <table id="lobbyTable">
                     <tr>
                         <td>
-                            <input type="image" id="seat1" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
-                            <input type="image" id="table1" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat2" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                            <table>
+                                <tr>
+                                    <td><p id="seat1_user" class="leftUser">&nbsp;</p></td><td><p id="seat2_user" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td><p id="seat1_status" class="leftUser">&nbsp;</p></td><td><p id="seat2_status" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <input type="image" id="seat1" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
+                                        <input type="image" id="table1" src="img/table.png" onclick="tableOnClick(this.id);"/>
+                                        <input type="image" id="seat2" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                         <td>
-                            <input type="image" id="seat3" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
-                            <input type="image" id="table2" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat4" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                            <table>
+                                <tr>
+                                    <td><p id="seat3_user" class="leftUser">&nbsp;</p></td><td><p id="seat4_user" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td><p id="seat3_status" class="leftUser">&nbsp;</p></td><td><p id="seat4_status" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <input type="image" id="seat3" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
+                                        <input type="image" id="table2" src="img/table.png" onclick="tableOnClick(this.id);"/>
+                                        <input type="image" id="seat4" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="image" id="seat5" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
-                            <input type="image" id="table3" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat6" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                            <table>
+                                <tr>
+                                    <td><p id="seat5_user" class="leftUser">&nbsp;</p></td><td><p id="seat6_user" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td><p id="seat5_status" class="leftUser">&nbsp;</p></td><td><p id="seat6_status" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <input type="image" id="seat5" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
+                                        <input type="image" id="table3" src="img/table.png" onclick="tableOnClick(this.id);"/>
+                                        <input type="image" id="seat6" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                         <td>
-                            <input type="image" id="seat7" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
-                            <input type="image" id="table4" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat8" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                            <table>
+                                <tr>
+                                    <td><p id="seat7_user" class="leftUser">&nbsp;</p></td><td><p id="seat8_user" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td><p id="seat7_status" class="leftUser">&nbsp;</p></td><td><p id="seat8_status" class="rightUser">&nbsp;</p></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <input type="image" id="seat7" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
+                                        <input type="image" id="table4" src="img/table.png" onclick="tableOnClick(this.id);"/>
+                                        <input type="image" id="seat8" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>

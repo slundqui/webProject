@@ -22,4 +22,6 @@ public class WebSocketMessage {
     public static final int TAKE_SEAT_FAIL      = 303;
     public static final int LEAVE_SEAT_REQUEST  = 304;
     public static final int LEAVE_SEAT_SUCCESS  = 305;
+    
+    public static final int READY_FOR_GAME     = 401;
 }
