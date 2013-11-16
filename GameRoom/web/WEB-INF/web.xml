@@ -9,6 +9,14 @@
         <url-pattern>/lobby.jsp</url-pattern>
     </filter-mapping>
     <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>edu.nmt.cs.itweb.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/RegisterServlet</url-pattern>
+    </servlet-mapping>
+    <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>edu.nmt.cs.itweb.LoginServlet</servlet-class>
     </servlet>

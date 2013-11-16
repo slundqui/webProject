@@ -29,7 +29,8 @@
                         <td>Password: </td><td><input type="password" name="password" required></td>
                     </tr>
                     <tr>
-                        <td colspan="2" align="center"><input type="submit" value="Login"></td>
+                        <td align="center"><input type="submit" value="Log In"></td>
+                        <td align="center"><a href = "./register.jsp"> New User? Register Here</a></td>
                     </tr>
                 </table>
             </form>
