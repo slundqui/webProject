@@ -157,6 +157,7 @@
                 document.getElementById(seatId+'_user').innerHTML  = "&nbsp;";
                 document.getElementById(seatId+'_status').innerHTML = "&nbsp;";
                 seatsUser[seatId] = null;
+                seatsStatus[seatId] = false;
                 writeToLogPanel("<span style='color:red'>"+user+"</span> has left seat </span>" + seatIndex +".");
             }
 
@@ -211,6 +212,11 @@
             }
 
             function tableOnClick(tableId) {
+                // if the user is already in READY status, do nothing.
+                // we don't provide UN-READY function, as that is covered by LEAVE_SEAT
+                if(seatsStatus[mySeat]) { 
+                    return;
+                }
                 //mySeat must match the table
                 if(
                    ((mySeat === "seat1" || mySeat === "seat2") && tableId === "table1") ||
