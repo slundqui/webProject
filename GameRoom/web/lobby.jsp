@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="edu.nmt.cs.itweb.WebSocketMessage"%>
+<%@page import="edu.nmt.cs.itweb.ServerConfig"%>
 <%
     String username = (String)session.getAttribute("LOGIN_USER");
 %>
@@ -22,7 +23,7 @@
             div {text-align: left;}
             #userList {background: #FF6; float: left;  width: 140px; height: 540px; padding: 5px; overflow: auto; overflow-x: hidden;}
             #lobbyContainer {background: #9FF; float: right; width: 840px; height:540px; padding: 5px; }
-            #logPanel {background: #333; color: #FFF; clear: both; width: auto; height: 140px; padding: 5px; overflow: auto; overflow-x: hidden;}
+            #logPanel {background: #333; color: #FFF; clear: both; width: auto; height: 130px; padding: 5px; overflow: auto; overflow-x: hidden;}
             #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px 70px;}
             input[type="image"] { outline: none;}
         </style>
@@ -38,7 +39,8 @@
                     "img/left_chair_with_player.png"
             );
             
-            var seatStatus = new Array(8);
+            var seatCount = <%=ServerConfig.SEAT_COUNT%>;
+            var seats = new Array(seatCount);
             var mySeat = null;
             
             function init() {
@@ -56,58 +58,81 @@
             }
 
             function onOpen(evt) {
-                doSend(<%=WebSocketMessage.ENTER_LOBBY%>, "<%=username%>", null);
+                doSend(<%=WebSocketMessage.ENTER_LOBBY%>, "<%=username%>");
+                doSend(<%=WebSocketMessage.REQUEST_SEATS_INFO%>, "<%=username%>");
             }
 
             function onClose(evt) {
             }
 
             function onMessage(evt) {
-                parseMessage(evt.data);
+                var msg = JSON.parse(evt.data);
+                switch(msg.action)
+                {
+                    case <%=WebSocketMessage.ENTER_LOBBY%>:
+                        enterLobby(msg.user);
+                        break;
+                    case <%=WebSocketMessage.EXIT_LOBBY%>:
+                        exitLobby(user);
+                        break;
+                    case <%=WebSocketMessage.RESPONSE_SEATS_INFO%>:
+                        updateSeatsInfo(msg.seatsInfo);
+                        break;
+                    case <%=WebSocketMessage.TAKE_SEAT_SUCCESS%>:
+                        sitUpdate(msg.user, msg.target);
+                        break;
+                    case <%=WebSocketMessage.LEAVE_SEAT_SUCCESS%>:
+                        standUpdate(msg.user, msg.target);
+                        break;
+                    default:
+                }
             }
 
             function onError(evt) { 
             } 
 
-            function doSend(action, param1, param2) {
-                if(param2 === null){
-                    websocket.send(JSON.stringify({'action':action, 'param1':param1}));
-                }
-                else{
-                    websocket.send(JSON.stringify({'action':action, 'param1':param1, 'param2':param2}));
-                }
-            }
-
-            function sitUpdate(id){
-                document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2 + 2];
-                seatStatus[id] = true;
-            }
-
-            function standUpdate(id){
-                document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2];
-                seatStatus[id] = false;
+            function doSend(action, user, target) {
+                target = typeof target !== 'undefined' ? target : 0;
+                websocket.send(JSON.stringify({'action':action, 'user':user, 'target':target}));
             }
             
-            function parseMessage(message) {
-                var msg = JSON.parse(message);
-                switch(msg.action)
-                {
-                    case <%=WebSocketMessage.ENTER_LOBBY%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has entered the lobby.");
-                        break;
-                    case <%=WebSocketMessage.EXIT_LOBBY%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has left the lobby.");
-                        break;
-                    case <%=WebSocketMessage.TAKE_SEAT%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has taken seat </span>" + msg.param2.charAt(4)+".");
-                        sitUpdate(msg.param2);
-                        break;
-                    case <%=WebSocketMessage.LEAVE_SEAT%>:
-                        writeToLogPanel("<span style='color:red'>"+msg.param1+"</span> has left seat </span>" + msg.param2.charAt(4)+".");
-                        standUpdate(msg.param2);
-                        break;
-                    default:
+            function enterLobby(user) {
+                writeToLogPanel("<span style='color:red'>"+user+"</span> has entered the lobby.");
+            }
+            
+            function exitLobby(user) {
+                writeToLogPanel("<span style='color:red'>"+user+"</span> has left the lobby.");
+            }
+            
+            function updateSeatsInfo(jSeats) {
+                for(var i = 0; i < seatCount; ++i) {
+                    var seatIndex = i+1;
+                    var seatId = "seat"+seatIndex;
+                    if(jSeats[i].length === 0) {
+                        seats[seatId] = null;
+                    }
+                    else {
+                        seats[seatId] = jSeats[i];
+                        document.getElementById(seatId).src=imageSrc[seatIndex % 2 + 2];
+                    }
                 }
+            }
+
+            function sitUpdate(user, seatIndex){
+                var seatId = 'seat'+seatIndex;
+                document.getElementById(seatId).src=imageSrc[seatIndex % 2 + 2];
+                seats[seatId] = user;
+                if("<%=username%>" === user) {
+                    mySeat = seatId;
+                }
+                writeToLogPanel("<span style='color:red'>"+user +"</span> has taken seat </span>" + seatIndex +".");
+            }
+
+            function standUpdate(user, seatIndex){
+                var seatId = 'seat'+seatIndex;
+                document.getElementById(seatId).src=imageSrc[seatIndex % 2];
+                seats[seatId] = null;
+                writeToLogPanel("<span style='color:red'>"+user+"</span> has left seat </span>" + seatIndex +".");
             }
 
             function writeToLogPanel(message) {
@@ -124,21 +149,22 @@
             }
             
             function logout() {
-                doSend(<%=WebSocketMessage.EXIT_LOBBY%>, "<%=username%>", null);
+                doSend(<%=WebSocketMessage.EXIT_LOBBY%>, "<%=username%>");
                 websocket.close();
                 window.location.replace("logout.jsp");
             }
 
-
-            function takeSeatAt(id) {
+            function seatOnClick(seatId) {
+                var seatIndex = getSeatIndex(seatId);
                 //If in the seat and you're in the seat
-                if(seatStatus[id] && mySeat === id) {
-                    document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2];
-                    seatStatus[id] = false;
+                if(seats[seatId] && mySeat === seatId) {
+                    // since LEAVE_SEAT_REQUEST will always success, we can update the UI and seats before sending the message.
+                    document.getElementById(seatId).src=imageSrc[seatIndex % 2];
+                    seats[seatId] = null;
                     mySeat = null;
-                    doSend(<%=WebSocketMessage.LEAVE_SEAT%>, "<%=username%>", id);
+                    doSend(<%=WebSocketMessage.LEAVE_SEAT_REQUEST%>, "<%=username%>", seatIndex);
                 }
-                else if(seatStatus[id] && mySeat !== id){
+                else if(seats[seatId] && mySeat !== seatId){
                     alert("Seat is taken");
                     return;
                 }
@@ -148,11 +174,12 @@
                         alert("You have already sitten at " + mySeat);
                         return;
                     }
-                    document.getElementById(id).src=imageSrc[parseInt(id.charAt(4)) % 2 + 2];
-                    seatStatus[id] = true;
-                    mySeat = id;
-                    doSend(<%=WebSocketMessage.TAKE_SEAT%>, "<%=username%>", id);
+                    doSend(<%=WebSocketMessage.TAKE_SEAT_REQUEST%>, "<%=username%>", seatIndex);
                 }
+            }
+            
+            function getSeatIndex(seatId) {
+                return parseInt(seatId.charAt(4));
             }
 
             function startTable(id){
@@ -181,26 +208,26 @@
                 <table id="lobbyTable">
                     <tr>
                         <td>
-                            <input type="image" id="seat1" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat1" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
                             <input type="image" id="table1" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat2" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat2" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
                         </td>
                         <td>
-                            <input type="image" id="seat3" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat3" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
                             <input type="image" id="table2" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat4" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat4" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="image" id="seat5" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat5" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
                             <input type="image" id="table3" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat6" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat6" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
                         </td>
                         <td>
-                            <input type="image" id="seat7" src="img/left_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat7" src="img/left_chair.png" onclick="seatOnClick(this.id);" />
                             <input type="image" id="table4" src="img/table.png" onclick="startTable(this.id);"/>
-                            <input type="image" id="seat8" src="img/right_chair.png" onclick="takeSeatAt(this.id);" />
+                            <input type="image" id="seat8" src="img/right_chair.png" onclick="seatOnClick(this.id);" />
                         </td>
                     </tr>
                 </table>

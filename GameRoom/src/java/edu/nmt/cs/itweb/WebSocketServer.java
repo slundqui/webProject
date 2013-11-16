@@ -8,10 +8,14 @@ package edu.nmt.cs.itweb;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.stream.JsonParser;
 import javax.websocket.CloseReason;
 import javax.websocket.EncodeException;
@@ -31,6 +35,7 @@ import javax.websocket.server.ServerEndpoint;
 public class WebSocketServer {
     
     private static final Set<Session> peers = Collections.synchronizedSet(new HashSet());
+    private static String[] seats = new String[ServerConfig.SEAT_COUNT];
 
     @OnOpen
     public void open(Session session, EndpointConfig conf) { 
@@ -43,7 +48,28 @@ public class WebSocketServer {
     public void onMessage(Session session, String msg) throws IOException, EncodeException {
         //Message received.
         System.out.println("EchoEndpoint on message");
-        broadcastMessage(msg);
+        JsonParser parser = Json.createParser(new StringReader(msg));
+        parser.next();
+        parser.next();
+        parser.next();
+        int action = parser.getInt();
+        parser.next();
+        parser.next();
+        String user = parser.getString();
+        parser.next();
+        parser.next();
+        int targetIndex = parser.getInt();
+        switch(action) {
+            case WebSocketMessage.REQUEST_SEATS_INFO:
+                sendSeatsStatus(session);
+                break;
+            case WebSocketMessage.TAKE_SEAT_REQUEST:
+            case WebSocketMessage.LEAVE_SEAT_REQUEST:
+                updateSeatStatus(session, action, user, targetIndex, msg);
+                break;
+            default:
+                broadcastMessage(msg);
+        }
     }
 
     @OnError
@@ -60,9 +86,47 @@ public class WebSocketServer {
         
     }
     
+    private void sendMessage(Session session, String msg) throws IOException, EncodeException {
+        session.getBasicRemote().sendObject(msg);
+    }
+    
     private void broadcastMessage(String msg) throws IOException, EncodeException {
         for (Session peer : peers) {
-            peer.getBasicRemote().sendObject(msg);
+            sendMessage(peer, msg);
         }
+    }
+    
+    private String makeReplyMessage(String msg, int replyAction){
+        return msg.substring(0, 10) + replyAction + msg.substring(13);
+    }
+
+    private synchronized void updateSeatStatus(Session session, int action, String user, int seatIndex, String msg) throws IOException, EncodeException {
+        switch (action) {
+            case WebSocketMessage.TAKE_SEAT_REQUEST:
+                if (seats[seatIndex - 1] == null) {
+                    seats[seatIndex - 1] = user;
+                    broadcastMessage(makeReplyMessage(msg, WebSocketMessage.TAKE_SEAT_SUCCESS));
+                } else {
+                    sendMessage(session, makeReplyMessage(msg, WebSocketMessage.TAKE_SEAT_FAIL));
+                }
+                break;
+            case WebSocketMessage.LEAVE_SEAT_REQUEST:
+                seats[seatIndex - 1] = null;
+                broadcastMessage(makeReplyMessage(msg, WebSocketMessage.LEAVE_SEAT_SUCCESS));
+                break;
+        }
+    }
+    
+    private void sendSeatsStatus(Session session) throws IOException, EncodeException  {
+        JsonArrayBuilder jarrBuilder = Json.createArrayBuilder();
+        for(int i = 0; i < ServerConfig.SEAT_COUNT; ++i) {
+            jarrBuilder.add(seats[i] != null ? seats[i] : "");
+        }
+        JsonObject jobj = Json.createObjectBuilder()
+                .add("action", WebSocketMessage.RESPONSE_SEATS_INFO)
+                .add("seatsInfo", jarrBuilder.build())
+                .build();
+        String msg = jobj.toString();
+        sendMessage(session, msg);
     }
 }
