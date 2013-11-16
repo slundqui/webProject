@@ -24,7 +24,7 @@
             #userList {background: #FF6; float: left;  width: 140px; height: 540px; padding: 5px; overflow: auto; overflow-x: hidden;}
             #lobbyContainer {background: #9FF; float: right; width: 840px; height:540px; padding: 5px; }
             #logPanel {background: #333; color: #FFF; clear: both; width: auto; height: 130px; padding: 5px; overflow: auto; overflow-x: hidden;}
-            #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px;}
+            #lobbyTable {margin: auto;border-collapse:separate; border-spacing:50px 40px;}
             input[type="image"] { outline: none;}
             .leftUser {text-align: left;}
             .rightUser {text-align: right;}
@@ -230,7 +230,10 @@
     <body>
         <div id="page-container">
             <div id="topbar"><a href="#" onclick="logout(); return false;">Logout</a></div>
-            <div id="header">Welcome to the Game Lobby!</div>
+            <div id="header">
+                Welcome to the Game Lobby! 
+                <p>*click a chair to sit, click again to leave; *after sitting, click the table if you're ready to start; *when both users at a table are ready, the game will start.</p>
+            </div>
             <div id="userList">[To-do:list online users]</div>
             <div id="lobbyContainer">
                 <table id="lobbyTable">
