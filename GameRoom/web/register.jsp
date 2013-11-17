@@ -10,6 +10,21 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>New User Registration</title>
+        <script language="JavaScript">
+            function validateReEnterPassword(repeatpwdObject){
+                if(repeatpwdObject.value != document.getElementsByName("pwd")[0].value){
+                    alert("Password does not match!");
+                }
+            }
+            
+            function validateForm(userForm){
+                if(!validateReEnterPassword(userForm.pwd, userForm.pwd2, "Password does not match")){
+                    userForm.pwd2.focus();
+                    return false;
+                }
+                return true;
+            }
+        </script>
     </head>
     <body>
         <div align="center">
@@ -27,7 +42,7 @@
                     </tr>
                     <tr>
                         <td>Re-enter password: </td>
-                        <td><input type="password" name="pwd2" required></td>
+                        <td><input type="password" name="repeatpwd" onmouseout="validateReEnterPassword(this)"></td>
                     </tr>
                     <tr>
                         <td colspan="2" align="center"><input type="submit" value="Register"></td>

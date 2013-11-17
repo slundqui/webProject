@@ -8,9 +8,14 @@ package edu.nmt.cs.itweb;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,18 +38,33 @@ public class RegisterServlet extends HttpServlet{
         res = response;
         out = res.getWriter();
 
-        // Get a connection
+        //Get a connection
         String GameRoomMySQLServer = "jdbc:mysql://localhost:3306/gameroom";
         String dbUsername = "hyao";
         String dbPassword = "gameroompwd";
         connect(GameRoomMySQLServer, dbUsername, dbPassword);
 
-        // Insert the new user into our tables
+        // Get the username and password from the UI
         String playerName = request.getParameter("username");
         String playerPwd = request.getParameter("pwd");
-        insertData(playerName, playerPwd);
+     
+        // Encrypt the password with SHA256
+        String encryptedPwd = "";
+        try{
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            byte[] hash = sha256.digest(playerPwd.getBytes("UTF-8"));
+            for(int i : hash){
+                encryptedPwd += Integer.toHexString(0XFF & i);
+            }
+        }
+        catch(NoSuchAlgorithmException ex){
+            Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+        // Insert the username and encrypted password into database
+        insertData(playerName, encryptedPwd);
 
-        // disconnect from the database
+        // Disconnect from the database
         disconnect();
 
         HttpSession session =  request.getSession();
@@ -60,15 +80,15 @@ public class RegisterServlet extends HttpServlet{
     
     /**
      * Insert data in our table
-     * @param userName: username of the new registered user 
-     * @param password: password of the new registered user
+     * @param userName  username of the new registered user 
+     * @param password  password of the new registered user
      */
     public void insertData(String userName, String password) {
         Statement stmt = null;
         try {
             stmt = conn.createStatement();
             stmt.executeUpdate("INSERT INTO user(uid, pwd) VALUES ('"+userName+"', '"+password+"')");
-        } catch (Exception e) {
+        } catch (SQLException e) {
             reportError("Error performing INSERT" + e);
         } finally {
             try {
