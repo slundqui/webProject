@@ -7,6 +7,16 @@
 package edu.nmt.cs.itweb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,13 +29,68 @@ import javax.servlet.http.HttpSession;
  */
 public class LoginServlet extends HttpServlet {
     
-    private boolean getUserAuthentication(String username, String password) {
-        //To-do: connect database to check if (username, password) exists
+    private boolean getUserAuthentication(String username, String password){
+        // To-do: connect database to check if (username, password) exists
         if( (username.equals("chen") && password.equals("123"))
           ||(username.equals("hyao") && password.equals("123")) 
           ||(username.equals("slundqui") && password.equals("123")) ){
             return true;
         }
+        
+        // Encrypt password with SHA256
+        String encryptedPwd = "";
+        try{
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            byte[] hash = sha256.digest(password.getBytes("UTF-8"));
+            for(int i : hash){
+                encryptedPwd += Integer.toHexString(0XFF & i);
+            }
+        } catch(NoSuchAlgorithmException ex){
+            Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        // Get the hashed password from database
+        String retrievedHashPwd = null;
+        Connection conn = DBConnectionManager.getConnection();
+        if(conn != null){
+            ResultSet rs = null;
+            Statement stmt = null;
+            try {
+                // Get the data of that user from database
+                String sqlQuery = "SELECT * FROM USER WHERE uid = '" + username + "'";
+                stmt = conn.createStatement();
+                rs = stmt.executeQuery(sqlQuery);
+                while (rs.next()) {
+                    retrievedHashPwd = rs.getString("pwd");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                // Close the connection
+                try {
+                    //Resultset closed prior to conn.close(), even if Statement object closes the ResultSet object implicitly when it closes
+                    if (rs != null) {
+                        rs.close(); //If you don't close the ResultRet(cursor), it will throw an error like "Maximum open cursors exceeded"
+                    }
+                    if (stmt != null) {
+                        stmt.close();
+                    }
+                    conn.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+        }
+        
+        //Compare the passwords, return true if they are the same
+        if(retrievedHashPwd != null && retrievedHashPwd.equals(encryptedPwd))
+        {
+            return true;
+        }
+        
         return false;
     }
 

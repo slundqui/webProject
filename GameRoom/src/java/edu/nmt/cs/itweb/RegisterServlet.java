@@ -27,8 +27,6 @@ import javax.servlet.http.HttpSession;
  * @author huipingyao
  */
 public class RegisterServlet extends HttpServlet{
-    private Connection conn = null;
-	
     private PrintWriter out = null;
     private HttpServletResponse res = null;
     
@@ -37,12 +35,6 @@ public class RegisterServlet extends HttpServlet{
         response.setContentType("text/html");
         res = response;
         out = res.getWriter();
-
-        //Get a connection
-        String GameRoomMySQLServer = "jdbc:mysql://localhost:3306/gameroom";
-        String dbUsername = "hyao";
-        String dbPassword = "gameroompwd";
-        connect(GameRoomMySQLServer, dbUsername, dbPassword);
 
         // Get the username and password from the UI
         String playerName = request.getParameter("username");
@@ -64,9 +56,7 @@ public class RegisterServlet extends HttpServlet{
         // Insert the username and encrypted password into database
         insertData(playerName, encryptedPwd);
 
-        // Disconnect from the database
-        disconnect();
-
+        // Get the session and redirect user to lobby
         HttpSession session =  request.getSession();
         session.setAttribute("LOGIN_USER", playerName);
         session.setAttribute("MESSAGE", null);
@@ -84,55 +74,27 @@ public class RegisterServlet extends HttpServlet{
      * @param password  password of the new registered user
      */
     public void insertData(String userName, String password) {
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
-            stmt.executeUpdate("INSERT INTO user(uid, pwd) VALUES ('"+userName+"', '"+password+"')");
-        } catch (SQLException e) {
-            reportError("Error performing INSERT" + e);
-        } finally {
-            try {
-                stmt.close();
-            } catch (Exception e) {
-                reportError("Error closing" + e);
-            }
-        }
-    }
-    
-    /**
-     * Connects to a database using the MySQL JDBC driver
-     */
-    public void connect(String url, String login, String password)
-    {
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            conn = DriverManager.getConnection(url, login, password);
-        } catch (Exception e) {
-            reportError("Error loading mysql JDBC driver: " + e);
-        }
+        Connection conn = DBConnectionManager.getConnection();
 
-        out.println("<p>Connected...");
-    }
-    
-    /**
-     * Closes our connection to the database
-     */
-    public void disconnect() {
-        try {
-            conn.close();
-        } catch (Exception e) {
-	    // Extensive error handling could be done here but not
-            // neccessary for this trivial application
-        }
-    }
-    
-    /**
-     * Report Errors
-     */
-    public void reportError(String errmsg) {
-        try {
-            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errmsg);
-        } catch (Exception e) {
+        if(conn != null){
+            Statement stmt = null;
+            try {
+                stmt = conn.createStatement();
+                stmt.executeUpdate("INSERT INTO user(uid, pwd) VALUES ('" + userName + "', '" + password + "')");
+            } catch (SQLException ex) {
+                Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                if(stmt != null) try {
+                    stmt.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 }
