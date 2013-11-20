@@ -24,6 +24,14 @@
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>ValidateUsernameServlet</servlet-name>
+        <servlet-class>edu.nmt.cs.itweb.ValidateUsernameServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ValidateUsernameServlet</servlet-name>
+        <url-pattern>/ValidateUsername</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>
             30
