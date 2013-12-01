@@ -10,7 +10,11 @@ package edu.nmt.cs.itweb;
  *
  * @author Chen
  */
-public class ServerConfig {
-    public static final int SEAT_COUNT = 8;
-    public static final int TABLE_COUNT = SEAT_COUNT/2;
+public class GomokuGame {
+    private int[][] board = new int[15][15];
+    
+    public void putStone(int x, int y, int stone){
+        board[x][y] = stone;
+    }
+    
 }

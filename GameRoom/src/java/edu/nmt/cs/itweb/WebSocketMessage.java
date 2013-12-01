@@ -23,5 +23,14 @@ public class WebSocketMessage {
     public static final int LEAVE_SEAT_REQUEST  = 304;
     public static final int LEAVE_SEAT_SUCCESS  = 305;
     
-    public static final int READY_FOR_GAME     = 401;
+    public static final int READY_FOR_GAME      = 401;
+    public static final int UNREADY_FOR_GAME    = 402;
+    
+    public static final int GAME_START_REQUEST  = 501;
+    public static final int GAME_START_SUCCESS  = 502;
+    public static final int GAME_END            = 503;
+    
+    public static final int ENTER_GAME          = 510;
+    
+    public static final int GOMOKU_PUT_STONE    = 601;
 }

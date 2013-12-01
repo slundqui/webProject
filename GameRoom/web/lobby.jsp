@@ -30,6 +30,10 @@
             .rightUser {text-align: right;}
         </style>
         <script language="javascript" type="text/javascript">  
+            window.history.forward();
+            function noBack() { 
+                window.history.forward();
+            }
             var wsUri = "ws://localhost:8080/GameRoom/GameLobby";
             var userList;
             var logPanel;
@@ -90,6 +94,12 @@
                     case <%=WebSocketMessage.READY_FOR_GAME%>:
                         readyForGame(msg.user, msg.target);
                         break;
+                    case <%=WebSocketMessage.UNREADY_FOR_GAME%>:
+                        unReadyForGame(msg.user, msg.target);
+                        break;
+                    case <%=WebSocketMessage.GAME_START_SUCCESS%>:
+                        startGame();
+                        break;                        
                     default:
                 }
             }
@@ -109,8 +119,19 @@
                 var pairSeatId = 'seat' + (seatIndex % 2 === 0 ? seatIndex-1 : seatIndex+1); 
                 if( seatsStatus[pairSeatId] && (mySeat === seatId || mySeat === pairSeatId) ) {
                     alert("Your game is about to start.");
-                    //TO-DO: redirect to the game page
+                    doSend(<%=WebSocketMessage.GAME_START_REQUEST%>, "<%=username%>", getSeatIndex(mySeat));
                 }
+            }
+            
+            function unReadyForGame(user, seatIndex) {
+                var seatId = 'seat'+seatIndex;
+                seatsStatus[seatId] = false;
+                document.getElementById(seatId+'_status').innerHTML  = "&nbsp;";
+            }
+            
+            function startGame()
+            {
+                window.location="game1.jsp?seat="+getSeatIndex(mySeat);
             }
             
             function enterLobby(user) {
@@ -125,6 +146,7 @@
                 for(var i = 0; i < seatCount; ++i) {
                     var seatIndex = i+1;
                     var seatId = "seat"+seatIndex;
+                    seatsStatus[seatId] = jsStatus[i];
                     if(jsUser[i].length === 0) {
                         seatsUser[seatId] = null;
                     }
@@ -132,11 +154,17 @@
                         seatsUser[seatId] = jsUser[i];
                         document.getElementById(seatId).src=imageSrc[seatIndex % 2 + 2];
                         document.getElementById(seatId+'_user').innerHTML  = jsUser[i];
+                        if("<%=username%>" === jsUser[i]) { // happens when a user returned from a game
+                            mySeat = seatId;
+                            seatsStatus[seatId] = false;
+                            doSend(<%=WebSocketMessage.UNREADY_FOR_GAME%>, "<%=username%>", getSeatIndex(mySeat));
+                        }
+                        if(seatsStatus[seatId]) {                       
+                            document.getElementById(seatId+'_status').innerHTML  = "<span style='font-weight:bold;color:green'>I'm ready!</span>";
+                        }
                     }
-                    seatsStatus[seatId] = jsStatus[i];
-                    if(seatsStatus[seatId]) {                       
-                        document.getElementById(seatId+'_status').innerHTML  = "<span style='font-weight:bold;color:green'>I'm ready!</span>";
-                    }
+                    
+
                 }
             }
 
@@ -233,7 +261,8 @@
             window.addEventListener("load", init, false);
         </script>
     </head>
-    <body>
+    <body onload="noBack();"
+    onpageshow="if (event.persisted) noBack();" onunload="">
         <div id="page-container">
             <div id="topbar"><a href="#" onclick="logout(); return false;">Logout</a></div>
             <div id="header">

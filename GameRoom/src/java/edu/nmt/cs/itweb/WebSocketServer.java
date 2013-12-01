@@ -9,6 +9,7 @@ package edu.nmt.cs.itweb;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +38,7 @@ public class WebSocketServer {
     private static final Set<Session> peers = Collections.synchronizedSet(new HashSet());
     private static String[] seatsUser = new String[ServerConfig.SEAT_COUNT];
     private static boolean[] seatsStatus = new boolean[ServerConfig.SEAT_COUNT];
+    static String[] inGame = new String[ServerConfig.SEAT_COUNT]; 
 
     @OnOpen
     public void open(Session session, EndpointConfig conf) { 
@@ -67,7 +69,11 @@ public class WebSocketServer {
             case WebSocketMessage.TAKE_SEAT_REQUEST:
             case WebSocketMessage.LEAVE_SEAT_REQUEST:
             case WebSocketMessage.READY_FOR_GAME:
+            case WebSocketMessage.UNREADY_FOR_GAME:
                 updateSeatStatus(session, action, user, targetIndex, msg);
+                break;
+            case WebSocketMessage.GAME_START_REQUEST:
+                sendUserToGame(session, user, targetIndex, msg);
                 break;
             default:
                 broadcastMessage(msg);
@@ -121,6 +127,10 @@ public class WebSocketServer {
                 seatsStatus[seatIndex - 1] = true;
                 broadcastMessage(msg);
                 break;
+            case WebSocketMessage.UNREADY_FOR_GAME:
+                seatsStatus[seatIndex - 1] = false;
+                broadcastMessage(msg);
+                break;
         }
     }
     
@@ -138,5 +148,11 @@ public class WebSocketServer {
                 .build();
         String msg = jobj.toString();
         sendMessage(session, msg);
+    }
+    
+    private void sendUserToGame(Session session, String user, int seatIndex, String msg)  throws IOException, EncodeException  {
+        //TO-DO: set session attribute or sth to authorize the user entering a certain game.
+        inGame[seatIndex - 1] = user;
+        sendMessage(session, makeReplyMessage(msg, WebSocketMessage.GAME_START_SUCCESS));
     }
 }
