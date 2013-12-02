@@ -36,7 +36,7 @@ import javax.websocket.server.ServerEndpoint;
 public class WebSocketServer {
     
     private static final Set<Session> peers = Collections.synchronizedSet(new HashSet());
-    private static String[] seatsUser = new String[ServerConfig.SEAT_COUNT];
+    static String[] seatsUser = new String[ServerConfig.SEAT_COUNT];
     private static boolean[] seatsStatus = new boolean[ServerConfig.SEAT_COUNT];
     static String[] inGame = new String[ServerConfig.SEAT_COUNT]; 
 

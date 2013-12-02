@@ -18,26 +18,29 @@
             html, body, p {margin: 0; padding: 0;}
             #page-container {width: 1000px; height: 820px; margin: auto; padding: 0;}
             canvas {border:1px solid #c3c3c3;}
+            #left_user, #right_user {font-weight:bold; font-size:2em; color:blue;}
+            #left_turn, #right_turn {font-size:1.5em; color:green;}
         </style>
         <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
 
     </head>
     <body>
         <div id="page-container">
+            <div id="waiting" align="center">Waiting for the other player ...</div>
             <table>
                 <tr>
                     <td width="100">
-                        <p>User1</p>
-                        <p>Your turn</p>
-                        <input type="button" value="Surrender" onclick="gotoLobby();"/>
+                        <div id="left_user">User1</div>
+                        <div id="left_turn">Your turn</div>
+                        <input id="left_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>
                     </td>
                     <td width="750">
                         <canvas id="canvas" width="750" height="750">Your browser does not support the HTML5 canvas tag.</canvas>
                     </td>
                     <td width="100">
-                        <p>User2</p>
-                        <p>Your turn</p>
-                        <input type="button" value="Surrender" onclick="gotoLobby();"/>
+                        <div id="right_user">User2</div>
+                        <div id="right_turn">Your turn</div>
+                        <input id="right_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>
                     </td>
                 </tr>
             </table>
@@ -60,15 +63,46 @@
                 wsUri = "ws://localhost:8080/GameRoom/GameServer?" + seatIndex;
             }
             
-            var myTurn = getTurn(seatIndex);
+            var myTurn = false;
+            $("#left_turn").css("visibility", "hidden");
+            $("#right_turn").css("visibility", "hidden");
+            
             var myColor =  getSeatColor(seatIndex);
             
-            function getTurn (seatIndex) {
-                return (parseInt(seatIndex)%2 === 0) ? false : true;
+            function updateUserUI(left, right) {
+                $("#left_user").html(left);
+                $("#right_user").html(right);
             }
             
-            function getSeatColor (seatIndex) {
-                return (parseInt(seatIndex)%2 === 0) ? "white":"black";
+            function updateTurnUI() {
+                if(parseInt(seatIndex)%2 === 1) { //I'm the left one
+                    if(myTurn) {
+                        $("#left_turn").css("visibility", "visible");
+                        $("#right_turn").css("visibility", "hidden");
+                    }
+                    else {
+                        $("#left_turn").css("visibility", "hidden");
+                        $("#right_turn").css("visibility", "visible");
+                    }
+                }
+                else { //I'm the right one
+                    if(myTurn) {
+                        $("#left_turn").css("visibility", "hidden");
+                        $("#right_turn").css("visibility", "visible");
+                    }
+                    else {
+                        $("#left_turn").css("visibility", "visible");
+                        $("#right_turn").css("visibility", "hidden");
+                    }
+                }
+            }
+            
+            function getTurn (seat) {
+                return (parseInt(seat)%2 === 0) ? false : true;
+            }
+            
+            function getSeatColor (seat) {
+                return (parseInt(seat)%2 === 0) ? "white":"black";
             }
             
             function init() {
@@ -111,6 +145,7 @@
                     }
                     doSend(<%=WebSocketMessage.GOMOKU_PUT_STONE%>, seatIndex, nx, ny);
                     myTurn = false;
+                    updateTurnUI();
                 }
                 else {
                     alert("not your turn");
@@ -120,21 +155,21 @@
             function startWebSocket() {
                 websocket = new WebSocket(wsUri);
                 websocket.onopen = function(evt) {
-                    onOpen(evt)
+                    onOpen(evt);
                 };
                 websocket.onclose = function(evt) {
-                    onClose(evt)
+                    onClose(evt);
                 };
                 websocket.onmessage = function(evt) {
-                    onMessage(evt)
+                    onMessage(evt);
                 };
                 websocket.onerror = function(evt) {
-                    onError(evt)
+                    onError(evt);
                 };
             }
 
             function onOpen(evt) {
-
+                doSend(<%=WebSocketMessage.GOMOKU_ENTER_GAME%>, seatIndex);
             }
 
             function onClose(evt) {
@@ -146,10 +181,19 @@
                 var msg = JSON.parse(evt.data);
                 switch (msg.action)
                 {
+                    case <%=WebSocketMessage.GOMOKU_PLAYERS%>:
+                        updateUserUI(msg.left, msg.right);
+                        break;
+                    case <%=WebSocketMessage.GOMOKU_GAME_READY%>:
+                        $("#waiting").hide();
+                        myTurn = getTurn(seatIndex);
+                        updateTurnUI();
+                        break;
                     case <%=WebSocketMessage.GOMOKU_PUT_STONE%>:
                         var color = getSeatColor(msg.seat);
                         drawStone(msg.x, msg.y, color);
                         myTurn = (color !== myColor);
+                        updateTurnUI();
                         break;
                     default:
                 }
