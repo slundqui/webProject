@@ -12,6 +12,26 @@
         <filter-name>SessionCheckFilter</filter-name>
         <url-pattern>/game1.jsp</url-pattern>
     </filter-mapping>
+    <filter-mapping>
+        <filter-name>SessionCheckFilter</filter-name>
+        <url-pattern>/profile.jsp</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SessionCheckFilter</filter-name>
+        <url-pattern>/viewProfile.jsp</url-pattern>
+    </filter-mapping>
+        <filter-mapping>
+        <filter-name>SessionCheckFilter</filter-name>
+        <url-pattern>/changePassword.jsp</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SessionCheckFilter</filter-name>
+        <url-pattern>/changePasswordSuccess.jsp</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SessionCheckFilter</filter-name>
+        <url-pattern>/changeProfileSuccess.jsp</url-pattern>
+    </filter-mapping>
     <servlet>
         <servlet-name>RegisterServlet</servlet-name>
         <servlet-class>edu.nmt.cs.itweb.RegisterServlet</servlet-class>
