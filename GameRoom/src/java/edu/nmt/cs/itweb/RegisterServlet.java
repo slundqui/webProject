@@ -36,6 +36,10 @@ public class RegisterServlet extends HttpServlet{
         out = res.getWriter();
 
         // Get the username and password from the UI
+        String firstName = request.getParameter("firstname");
+        String middleName = request.getParameter("middlename");
+        String lastName = request.getParameter("lastname");
+        String email = request.getParameter("email");
         String playerName = request.getParameter("username");
         String playerPwd = request.getParameter("pwd");
      
@@ -53,7 +57,7 @@ public class RegisterServlet extends HttpServlet{
         }
        
         // Insert the username and encrypted password into database
-        insertData(playerName, encryptedPwd);
+        insertData(playerName, encryptedPwd, firstName, middleName, lastName, email);
 
         // Get the session and redirect user to lobby
         HttpSession session =  request.getSession();
@@ -72,14 +76,18 @@ public class RegisterServlet extends HttpServlet{
      * @param userName  username of the new registered user 
      * @param password  password of the new registered user
      */
-    public void insertData(String userName, String password) {
+    public void insertData(String userName, String password, String firstname, String middlename, String lastname, String email) {
+        if(middlename == null){
+            middlename = "";
+        }
+        
         Connection conn = DBConnectionManager.getConnection();
-
         if(conn != null){
             Statement stmt = null;
             try {
                 stmt = conn.createStatement();
-                stmt.executeUpdate("INSERT INTO user(uid, pwd) VALUES ('" + userName + "', '" + password + "')");
+                stmt.executeUpdate("INSERT INTO user(uid, pwd, firstname, middlename, lastname, email) VALUES "
+                                + "('" + userName + "', '" + password + "', '"+ firstname + "','"+ middlename + "','" + lastname + "','" + email +"')");
             } catch (SQLException ex) {
                 Logger.getLogger(RegisterServlet.class.getName()).log(Level.SEVERE, null, ex);
             } finally {

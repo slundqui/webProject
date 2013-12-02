@@ -264,7 +264,7 @@
     <body onload="noBack();"
     onpageshow="if (event.persisted) noBack();" onunload="">
         <div id="page-container">
-            <div id="topbar"><a href="#" onclick="logout(); return false;">Logout</a></div>
+            <div id="topbar"><a href="profile.jsp">Your Account</a>&nbsp&nbsp|&nbsp&nbsp<a href="#" onclick="logout(); return false;">Logout</a></div>
             <div id="header">
                 Welcome to the Game Lobby! 
                 <p>*click a chair to sit, click again to leave; *after sitting, click the table if you're ready to start; *when both users at a table are ready, the game will start.</p>
