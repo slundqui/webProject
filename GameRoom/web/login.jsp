@@ -35,13 +35,6 @@
                 </table>
             </form>
             <span style = "color:red;"><%=message %></span>
-            <p>
-            <hr width="30%">
-                Username/Password for test:<br>
-                chen/123<br>
-                hyao/123<br>
-                slundqui/123<br>
-            </p>
         </div>
     </body>
 </html>

@@ -135,7 +135,7 @@
             <h1>Game Room</h1> <br/>
             <form action="RegisterServlet" onsubmit="return validateForm()" method="post">
                 <h3>New User Registration</h3> <br/>
-                <table border="1" width="100%">
+                <table border="1" width="800">
                     <tr>
 			<td>
 			Account Profile<br>
@@ -145,9 +145,9 @@
                     <tr>
                         <td>
                              <table border="0" width="100%" style="padding:10px;">
-                                <col width="30%">
-                                <col width="50%">
                                 <col width="20%">
+                                <col width="20%">
+                                <col width="60%">
                                 <tr>
                                     <td>* First Name: </td>
                                     <td><input type="text" name="firstname" size="20"></td>

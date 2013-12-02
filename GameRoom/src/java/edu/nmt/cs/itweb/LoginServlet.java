@@ -29,12 +29,12 @@ import javax.servlet.http.HttpSession;
 public class LoginServlet extends HttpServlet {
     
     private boolean getUserAuthentication(String username, String password){
-        // To-do: connect database to check if (username, password) exists
+        /*
         if( (username.equals("chen") && password.equals("123"))
           ||(username.equals("hyao") && password.equals("123")) 
           ||(username.equals("slundqui") && password.equals("123")) ){
             return true;
-        }
+        }*/
         
         // Encrypt password with SHA256
         String encryptedPwd = "";
