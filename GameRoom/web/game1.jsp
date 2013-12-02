@@ -32,7 +32,7 @@
                     <td width="100">
                         <div id="left_user">User1</div>
                         <div id="left_turn">Your turn</div>
-                        <input id="left_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>
+                        <%--<input id="left_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>--%>
                     </td>
                     <td width="750">
                         <canvas id="canvas" width="750" height="750">Your browser does not support the HTML5 canvas tag.</canvas>
@@ -40,7 +40,7 @@
                     <td width="100">
                         <div id="right_user">User2</div>
                         <div id="right_turn">Your turn</div>
-                        <input id="right_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>
+                        <%--<input id="right_surrender" type="button" value="Surrender" onclick="gotoLobby();"/>--%>
                     </td>
                 </tr>
             </table>
