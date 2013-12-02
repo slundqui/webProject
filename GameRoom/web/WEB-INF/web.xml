@@ -36,6 +36,30 @@
         <servlet-name>ValidateUsernameServlet</servlet-name>
         <url-pattern>/ValidateUsername</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>ChangePasswordServlet</servlet-name>
+        <servlet-class>edu.nmt.cs.itweb.ChangePasswordServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ChangePasswordServlet</servlet-name>
+        <url-pattern>/ChangePasswordServlet</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>ViewProfileServlet</servlet-name>
+        <servlet-class>edu.nmt.cs.itweb.ViewProfileServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ViewProfileServlet</servlet-name>
+        <url-pattern>/ViewProfileServlet</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>UpdateProfileServlet</servlet-name>
+        <servlet-class>edu.nmt.cs.itweb.UpdateProfileServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UpdateProfileServlet</servlet-name>
+        <url-pattern>/UpdateProfileServlet</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>
             30

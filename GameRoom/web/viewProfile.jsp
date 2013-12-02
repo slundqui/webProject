@@ -1,6 +1,6 @@
 <%-- 
-    Document   : register
-    Created on : Nov 16, 2013, 2:00:43 PM
+    Document   : viewProfile
+    Created on : Dec 2, 2013, 2:20:04 AM
     Author     : huipingyao
 --%>
 
@@ -133,8 +133,8 @@
     <body>
         <div align="center">
             <h1>Game Room</h1> <br/>
-            <form action="RegisterServlet" onsubmit="return validateForm()" method="post">
-                <h3>New User Registration</h3> <br/>
+            <form action="UpdateProfileServlet" onsubmit="return validateForm()" method="post">
+                <h3>Your Profile</h3> <br/>
                 <table border="1" width="100%">
                     <tr>
 			<td>
@@ -150,43 +150,27 @@
                                 <col width="20%">
                                 <tr>
                                     <td>* First Name: </td>
-                                    <td><input type="text" name="firstname" size="20"></td>
+                                    <td><input type="text" name="firstname" size="20" value='${firstnameContent}'></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>Middle Name</td>
-                                    <td><input type="text" name="middlename" size="10"></td>
+                                    <td><input type="text" name="middlename" size="10" value=${middlenameContent}></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>* Last Name</td>
-                                    <td><input type="text" name="lastname" size="20"></td>
+                                    <td><input type="text" name="lastname" size="20" value=${lastnameContent}></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>* Email</td>
-                                    <td><input type="text" name="email" size="40" onblur="validateEmail(this)" required></td>
+                                    <td><input type="text" name="email" size="40" value=${emailContent} onblur="validateEmail(this)" required></td>
                                     <td><div id="email_warning"></div></td>
                                 </tr>
-                                <tr>
-                                    <td>* Username: </td>
-                                    <td><input type="text" name="username" onblur="validateUsername(this)" required></td>
-                                    <td><div id="divId"><font color='#C0C0C0' size='2.5' face='Arial'>Use at lease 4 characters (letters, numbers, periods only).</font></div></td>
-                                </tr>
-                                <tr>
-                                    <td>Password: </td>
-                                    <td><input type="password" name="pwd" onblur="validatePassword(this)" required></td>
-                                    <td><div id="pwd_warning"><font color='#C0C0C0' size='2.5' face='Arial'>Use a mix of at least 6 letters, numbers or special characters (!,@,#,$,&,*).</font></div></td>
-                                </tr>
-                                <tr>
-                                    <td>Re-enter password: </td>
-                                    <td><input type="password" name="repeatpwd" onblur="validateReEnterPassword(this)"></td>
-                                    <td><div id="repwd_warning"></td>
-                                </tr>
-                                
                             </table>
                             <table border="0" width="100%" style="padding:10px;">
-                                <tr><td><input type="submit" value="Register"><input type="reset" value="Reset"></td></tr>
+                                <tr><td><input type="submit" value="Update Profile"><input type="button" value="Cancel" onclick="history.back()"></td></tr>
                             </table>
                         </td>
                     </tr>
