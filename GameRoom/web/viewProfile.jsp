@@ -150,22 +150,22 @@
                                 <col width="20%">
                                 <tr>
                                     <td>* First Name: </td>
-                                    <td><input type="text" name="firstname" size="20" value='${firstnameContent}'></td>
+                                    <td><input type="text" name="firstname" size="20" value="${firstnameContent}"></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>Middle Name</td>
-                                    <td><input type="text" name="middlename" size="10" value=${middlenameContent}></td>
+                                    <td><input type="text" name="middlename" size="10" value="${middlenameContent}"></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>* Last Name</td>
-                                    <td><input type="text" name="lastname" size="20" value=${lastnameContent}></td>
+                                    <td><input type="text" name="lastname" size="20" value="${lastnameContent}"></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <td>* Email</td>
-                                    <td><input type="text" name="email" size="40" value=${emailContent} onblur="validateEmail(this)" required></td>
+                                    <td><input type="text" name="email" size="40" value="${emailContent}" onblur="validateEmail(this)" required></td>
                                     <td><div id="email_warning"></div></td>
                                 </tr>
                             </table>

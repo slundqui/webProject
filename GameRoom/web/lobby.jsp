@@ -269,7 +269,7 @@
                 Welcome to the Game Lobby! 
                 <p>*click a chair to sit, click again to leave; *after sitting, click the table if you're ready to start; *when both users at a table are ready, the game will start.</p>
             </div>
-            <div id="userList">[To-do:list online users]</div>
+            <div id="userList"></div>
             <div id="lobbyContainer">
                 <table id="lobbyTable">
                     <tr>
