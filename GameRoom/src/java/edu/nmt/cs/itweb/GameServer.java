@@ -8,6 +8,7 @@ package edu.nmt.cs.itweb;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -90,8 +91,19 @@ public class GameServer {
                     }
                     break;
                 case WebSocketMessage.GOMOKU_PUT_STONE:
-                    games[tableIndex].putStone(x, y, getSeatColor(seatIndex));
-                    broadcastMessage(tableIndex, msg);
+                    int color = getSeatColor(seatIndex);
+                    if(games[tableIndex].putStone(x, y, color)){
+                        int result = games[tableIndex].isGameOver();
+                        if(GomokuGame.NOT_FINISHED == result){
+                            broadcastMessage(tableIndex, msg);
+                        }
+                        else {
+                            broadcastGameOver(seatIndex, tableIndex, result, x, y);
+                        }
+                    }
+                    else {
+                        sendPutStoneRejection(session);
+                    }
                     break;
                 default:
             }
@@ -140,25 +152,43 @@ public class GameServer {
             return (seatIndex-1)/2;
     }
     
-    private int getSeatColor(int seatIndex) {
-        return seatIndex % 2 + 1;
+    private int getSeatColor(int seatIndex) { 
+        return seatIndex % 2 + 1; // left_seat:black:1,  right_seat:white:2
+    }
+    
+    private String getLeftUser(int seatIndex) {
+        if(seatIndex % 2 == 0){
+            return WebSocketServer.seatsUser[seatIndex];
+        }
+        else {
+            return WebSocketServer.seatsUser[seatIndex-1];
+        }
+    }
+    
+    private String getRightUser(int seatIndex) {
+        if(seatIndex % 2 == 0){
+            return WebSocketServer.seatsUser[seatIndex+1];
+        }
+        else {
+            return WebSocketServer.seatsUser[seatIndex];
+        }
     }
     
     private void sendSeatsUser(Session session, int seatIndex) {
-        String leftUser;
-        String rightUser;
-        if(seatIndex % 2 == 0){
-            leftUser = WebSocketServer.seatsUser[seatIndex];
-            rightUser = WebSocketServer.seatsUser[seatIndex+1];
-        }
-        else {
-            leftUser = WebSocketServer.seatsUser[seatIndex-1];
-            rightUser = WebSocketServer.seatsUser[seatIndex];
-        }
+        String leftUser = getLeftUser(seatIndex);
+        String rightUser = getRightUser(seatIndex);
         JsonObject jobj = Json.createObjectBuilder()
                 .add("action", WebSocketMessage.GOMOKU_PLAYERS)
                 .add("left", leftUser)
                 .add("right", rightUser)
+                .build();
+        String msg = jobj.toString();
+        sendMessage(session, msg);
+    }
+    
+    private void sendPutStoneRejection(Session session) {
+        JsonObject jobj = Json.createObjectBuilder()
+                .add("action", WebSocketMessage.GOMOKU_PUT_STONE_REJECT)
                 .build();
         String msg = jobj.toString();
         sendMessage(session, msg);
@@ -170,5 +200,31 @@ public class GameServer {
                 .build();
         String msg = jobj.toString();
         broadcastMessage(tableIndex, msg);
+    }
+    
+    private void broadcastGameOver(int seatIndex, int tableIndex, int result, int x, int y) {
+        String winner = null;
+        switch(result) 
+        {
+            case GomokuGame.TIE: // TIE = who plays first lose
+            case GomokuGame.WHITE_WINS:
+                winner = getRightUser(seatIndex);
+                break;
+            case GomokuGame.BLACK_WINS:
+                winner = getLeftUser(seatIndex);
+                break;
+            default:
+        }
+        if(winner != null){
+            JsonObject jobj = Json.createObjectBuilder()
+                    .add("action", WebSocketMessage.GOMOKU_GAME_OVER)
+                    .add("winner", winner)
+                    .add("x", x)
+                    .add("y", y)
+                    .add("seat", seatIndex+1)
+                    .build();
+            String msg = jobj.toString();
+            broadcastMessage(tableIndex, msg);
+        }
     }
 }

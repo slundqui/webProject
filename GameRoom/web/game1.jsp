@@ -51,6 +51,8 @@
             var canvasOffset = $("#canvas").offset();
             var offsetX = canvasOffset.left;
             var offsetY = canvasOffset.top;
+            var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+            var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
 
             var seatIndex = <%=request.getParameter("seat")%>;
             
@@ -132,8 +134,10 @@
             
             $("#canvas").mousedown(function(e) {
                 if(myTurn) {
-                    var x = parseInt(e.pageX - offsetX);
-                    var y = parseInt(e.pageY - offsetY);
+                    var rx = e.pageX || e.clientX + scrollX;
+                    var ry = e.pageY || e.clientY + scrollY;
+                    var x = rx - offsetX;
+                    var y = ry - offsetY;
                     var nx = Math.floor((x)/50);
                     var ny = Math.floor((y)/50);
                     //fix the boundary
@@ -145,7 +149,7 @@
                     }
                     doSend(<%=WebSocketMessage.GOMOKU_PUT_STONE%>, seatIndex, nx, ny);
                     myTurn = false;
-                    updateTurnUI();
+                    // delay turn UI updating
                 }
                 else {
                     alert("not your turn");
@@ -194,6 +198,15 @@
                         drawStone(msg.x, msg.y, color);
                         myTurn = (color !== myColor);
                         updateTurnUI();
+                        break;
+                    case <%=WebSocketMessage.GOMOKU_PUT_STONE_REJECT%>:
+                        myTurn = true;
+                        //no need to update turn UI
+                        break;    
+                    case <%=WebSocketMessage.GOMOKU_GAME_OVER%>:
+                        drawStone(msg.x, msg.y, getSeatColor(msg.seat));
+                        alert(msg.winner + " wins");
+                        gotoLobby();
                         break;
                     default:
                 }

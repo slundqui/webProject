@@ -32,8 +32,10 @@ public class WebSocketMessage {
     
     public static final int ENTER_GAME          = 510;
     
-    public static final int GOMOKU_ENTER_GAME   = 600;
-    public static final int GOMOKU_PLAYERS      = 601;
-    public static final int GOMOKU_GAME_READY   = 602;
-    public static final int GOMOKU_PUT_STONE    = 610;
+    public static final int GOMOKU_ENTER_GAME       = 600;
+    public static final int GOMOKU_PLAYERS          = 601;
+    public static final int GOMOKU_GAME_READY       = 602;
+    public static final int GOMOKU_GAME_OVER        = 603;
+    public static final int GOMOKU_PUT_STONE        = 610;
+    public static final int GOMOKU_PUT_STONE_REJECT = 611;
 }
